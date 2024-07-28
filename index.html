@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Image Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #image-container {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+        }
+        input[type="text"], button {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        button {
+            cursor: pointer;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        a {
+            text-decoration: none;
+            color: white;
+        }
+        #error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Image Viewer</h1>
+    <input type="text" id="image-id" placeholder="Enter Image ID" onkeydown="checkEnter(event)">
+    <button id="show-button" onclick="updateImage()">Show Image</button>
+    <button id="reset-button" onclick="reset()" style="display: none;">Reset</button>
+    <a id="download-link" href="#" download style="display: none;">
+        <button>Download Image</button>
+    </a>
+
+    <div id="image-container">
+        <img id="image" src="" alt="Image will appear here" onerror="showError()" onload="hideError()">
+    </div>
+    <div id="error-message"></div>
+
+    <script>
+        function checkEnter(event) {
+            if (event.key === "Enter") {
+                updateImage();
+            }
+        }
+
+        function updateImage() {
+            const imageId = document.getElementById('image-id').value;
+            const imageUrl = `https://erp.psit.ac.in/assets/img/Simages/${imageId}.jpg`;
+            document.getElementById('image').src = imageUrl;
+            document.getElementById('download-link').href = imageUrl;
+            document.getElementById('download-link').style.display = 'none'; // Hide download button initially
+        }
+
+        function reset() {
+            document.getElementById('image-id').value = '';
+            document.getElementById('image').src = '';
+            document.getElementById('download-link').style.display = 'none';
+            document.getElementById('reset-button').style.display = 'none';
+            document.getElementById('error-message').textContent = '';
+        }
+
+        function showError() {
+            document.getElementById('error-message').textContent = 'Wrong ID. Image not found.';
+            document.getElementById('download-link').style.display = 'none';
+        }
+
+        function hideError() {
+            document.getElementById('error-message').textContent = '';
+            document.getElementById('download-link').style.display = 'inline';
+            document.getElementById('reset-button').style.display = 'inline';
+        }
+    </script>
+
+</body>
+</html>
