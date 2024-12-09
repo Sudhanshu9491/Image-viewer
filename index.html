@@ -19,8 +19,9 @@
             margin-top: 20px;
         }
         img {
-            max-width: 100%;
-            height: auto;
+            width: 400px; /* Restrict width */
+            height: 400px; /* Restrict height */
+            object-fit: cover; /* Ensure images maintain proportions */
             border: 2px solid #ccc;
             border-radius: 10px;
         }
@@ -40,63 +41,123 @@
         button:hover {
             background-color: #0056b3;
         }
-        a {
-            text-decoration: none;
-            color: white;
-        }
         #error-message {
             color: red;
             margin-top: 10px;
         }
+        #counter {
+            margin-top: 10px;
+            font-weight: bold;
+        }
     </style>
 </head>
-<body>
+<body onclick="togglePause()">
 
     <h1>Image Viewer</h1>
-    <input type="text" id="image-id" placeholder="Enter Image ID" onkeydown="checkEnter(event)">
-    <button id="show-button" onclick="updateImage()">Show Image</button>
+    <input type="text" id="image-id-range" placeholder="Enter range (e.g., 1-5)" onkeydown="checkEnter(event)">
+    <button id="show-button" onclick="showImagesInRange()">Show Images</button>
+    <button id="previous-button" onclick="showPreviousImage()" style="display: none;">Previous Image</button>
     <button id="reset-button" onclick="reset()" style="display: none;">Reset</button>
-    <a id="download-link" href="#" download style="display: none;">
-        <button>Download Image</button>
-    </a>
 
     <div id="image-container">
-        <img id="image" src="" alt="Image will appear here" onerror="showError()" onload="hideError()">
+        <img id="image" src="" alt="Images will appear here" onerror="useFallbackImage()" onload="hideError()">
     </div>
+    <div id="counter"></div>
     <div id="error-message"></div>
 
     <script>
+        let timer; // Timer for the slideshow
+        let imageIds = []; // List of image IDs
+        let currentIndex = 0; // Current index in the image array
+        let isPaused = false; // Pause state
+        let startRange = 0; // Starting range of images
+        const fallbackImageUrl = "https://via.placeholder.com/400"; // Placeholder image URL
+
         function checkEnter(event) {
             if (event.key === "Enter") {
-                updateImage();
+                showImagesInRange();
             }
         }
 
-        function updateImage() {
-            const imageId = document.getElementById('image-id').value;
+        function showImagesInRange() {
+            const rangeInput = document.getElementById('image-id-range').value.trim();
+            const [start, end] = rangeInput.split('-').map(Number);
+
+            if (!start || !end || start > end) {
+                document.getElementById('error-message').textContent = 'Invalid range. Please enter a valid range (e.g., 1-5).';
+                return;
+            }
+
+            startRange = start; // Set the start of the range
+            document.getElementById('error-message').textContent = '';
+            imageIds = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+            currentIndex = 0;
+            displayImages();
+
+            // Show control buttons
+            document.getElementById('reset-button').style.display = 'inline';
+            document.getElementById('previous-button').style.display = 'inline';
+        }
+
+        function displayImages() {
+            if (currentIndex >= imageIds.length) {
+                clearTimeout(timer);
+                return;
+            }
+
+            const imageId = imageIds[currentIndex];
             const imageUrl = `https://erp.psit.ac.in/assets/img/Simages/${imageId}.jpg`;
             document.getElementById('image').src = imageUrl;
-            document.getElementById('download-link').href = imageUrl;
-            document.getElementById('download-link').style.display = 'none'; // Hide download button initially
+
+            // Update the counter display
+            document.getElementById('counter').textContent = `Showing image ${startRange + currentIndex} of ${startRange + imageIds.length - 1}`;
+
+            currentIndex++;
+            timer = setTimeout(() => {
+                if (!isPaused) {
+                    displayImages();
+                }
+            }, 500);
+        }
+
+        function showPreviousImage() {
+            if (currentIndex > 1) {
+                currentIndex -= 2; // Go back two steps (1 for decrement, 1 for upcoming increment in displayImages)
+                displayImages();
+            }
+        }
+
+        function togglePause() {
+            isPaused = !isPaused; // Toggle the pause state
+            if (!isPaused) {
+                displayImages(); // Resume the slideshow if unpaused
+            }
+        }
+
+        function useFallbackImage() {
+            document.getElementById('image').src = fallbackImageUrl; // Show the placeholder image
+            document.getElementById('error-message').textContent = 'Image not found. Showing a placeholder image.';
         }
 
         function reset() {
-            document.getElementById('image-id').value = '';
-            document.getElementById('image').src = '';
-            document.getElementById('download-link').style.display = 'none';
-            document.getElementById('reset-button').style.display = 'none';
-            document.getElementById('error-message').textContent = '';
-        }
+            clearTimeout(timer); // Clear the timer
+            imageIds = [];
+            currentIndex = 0;
+            isPaused = false;
 
-        function showError() {
-            document.getElementById('error-message').textContent = 'Wrong ID. Image not found.';
-            document.getElementById('download-link').style.display = 'none';
+            // Reset UI elements
+            document.getElementById('image-id-range').value = '';
+            document.getElementById('image').src = '';
+            document.getElementById('counter').textContent = '';
+            document.getElementById('error-message').textContent = '';
+
+            // Hide control buttons
+            document.getElementById('reset-button').style.display = 'none';
+            document.getElementById('previous-button').style.display = 'none';
         }
 
         function hideError() {
             document.getElementById('error-message').textContent = '';
-            document.getElementById('download-link').style.display = 'inline';
-            document.getElementById('reset-button').style.display = 'inline';
         }
     </script>
 
